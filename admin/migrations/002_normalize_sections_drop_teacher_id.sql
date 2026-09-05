@@ -1,0 +1,8 @@
+-- Optional normalization: remove legacy single-adviser column from `sections`.
+-- Teacher linkage for evaluations should use `section_subject_teacher_assignments`
+-- (section + subject + teacher + school_year + semester).
+--
+-- The admin Section Management module also runs this automatically on load when safe.
+-- If this fails due to permissions or unknown FK names, drop foreign keys on `sections.teacher_id`
+-- manually in phpMyAdmin, then:
+--   ALTER TABLE sections DROP COLUMN teacher_id;
