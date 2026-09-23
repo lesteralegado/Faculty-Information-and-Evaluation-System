@@ -1,7 +1,7 @@
 <?php
 if (!isset($_SESSION)) { session_start(); }
 if (!isset($_SESSION['username'])) {
-    header('Location: /capstone/login.php');
+    header('Location: /login.php');
     exit();
 }
 
@@ -90,15 +90,15 @@ function notif_target_url($n, $role) {
     $title_lower = strtolower($n['title']);
     $message_lower = strtolower($n['message']);
     if (strpos($title_lower, 'evaluation') !== false || strpos($message_lower, 'evaluation') !== false) {
-        if ($role === 'student') return '/capstone/student/evaluation_form.php';
-        if ($role === 'teacher') return '/capstone/teacher/teacher_dashboard.php';
-        return '/capstone/evaluation_result.php';
+        if ($role === 'student') return '/student/evaluation_form.php';
+        if ($role === 'teacher') return '/teacher/teacher_dashboard.php';
+        return '/evaluation_result.php';
     }
     if (strpos($title_lower, 'request status updated') !== false || strpos($message_lower, 'request') !== false) {
-        if ($role === 'student') return '/capstone/student/credential_form_request.php';
-        if ($role === 'registrar') return '/capstone/admin/user_management.php';
+        if ($role === 'student') return '/student/credential_form_request.php';
+        if ($role === 'registrar') return '/admin/user_management.php';
     }
-    return '/capstone/';
+    return '/';
 }
 ?>
 <!DOCTYPE html>
@@ -106,7 +106,7 @@ function notif_target_url($n, $role) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Notifications</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -156,7 +156,7 @@ function notif_target_url($n, $role) {
                             $extraMeta = $request_details[$reqId] ?? null;
                         }
                     ?>
-                    <a class="notif-item <?php echo $n['is_read'] ? '' : 'unread'; ?>" href="/capstone/includes/notification_redirect.php?id=<?php echo (int)$n['id']; ?>">
+                    <a class="notif-item <?php echo $n['is_read'] ? '' : 'unread'; ?>" href="/includes/notification_redirect.php?id=<?php echo (int)$n['id']; ?>">
                         <span class="notif-dot"></span>
                         <div class="notif-icon <?php echo htmlspecialchars($n['type']); ?>">
                             <?php
@@ -212,7 +212,7 @@ function notif_target_url($n, $role) {
         if (!item) return;
         const id = parseInt(item.getAttribute('data-id'), 10);
         const url = item.getAttribute('data-url');
-        fetch('/capstone/includes/mark_notification_read.php', {
+        fetch('/includes/mark_notification_read.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ notification_id: id })

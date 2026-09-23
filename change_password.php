@@ -76,16 +76,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $redirect_url = '';
         switch ($user['role']) {
             case 'admin':
-                $redirect_url = '/capstone/admin/admin_dashboard.php';
+                $redirect_url = '/admin/admin_dashboard.php';
                 break;
             case 'registrar':
-                $redirect_url = '/capstone/registrar/registrar_dashboard.php';
+                $redirect_url = '/registrar/registrar_dashboard.php';
                 break;
             case 'teacher':
-                $redirect_url = '/capstone/teacher/teacher_dashboard.php';
+                $redirect_url = '/teacher/teacher_dashboard.php';
                 break;
             case 'student':
-                $redirect_url = '/capstone/student/student_dashboard.php';
+                $redirect_url = '/student/student_dashboard.php';
                 break;
         }
 
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Change Password</title>
     
     <!-- Bootstrap CSS -->

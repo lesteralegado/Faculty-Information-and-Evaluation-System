@@ -58,30 +58,7 @@ if (empty($student_email) || !filter_var($student_email, FILTER_VALIDATE_EMAIL))
     die("Invalid or missing email address. Please update your email in user settings.");
 }
 
-// Ensure OTP table exists
-$conn->query(
-    "CREATE TABLE IF NOT EXISTS credential_request_otps (
-        otp_id INT AUTO_INCREMENT PRIMARY KEY,
-        student_id INT NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        credential_type VARCHAR(100) NOT NULL,
-        purpose VARCHAR(100) NOT NULL,
-        otp_hash VARCHAR(255) NOT NULL,
-        expires_at DATETIME NOT NULL,
-        attempts INT NOT NULL DEFAULT 0,
-        is_verified TINYINT(1) NOT NULL DEFAULT 0,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        verified_at DATETIME NULL,
-        INDEX idx_student_verified (student_id, is_verified, created_at),
-        INDEX idx_expiry (expires_at)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-);
-
-// Add resend_at column if it doesn't exist (for tracking resend cooldown)
-$check_column = $conn->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='credential_request_otps' AND COLUMN_NAME='resend_at'");
-if ($check_column && $check_column->num_rows === 0) {
-    $conn->query("ALTER TABLE credential_request_otps ADD COLUMN resend_at DATETIME NULL AFTER created_at");
-}
+// Database schema is installed with deployment/schema-repair.sql, not during requests.
 
 function maskEmail(string $email): string {
     if ($email === '' || strpos($email, '@') === false) {
@@ -419,7 +396,7 @@ $requests_stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Credential Request Form</title>
     
     <!-- Bootstrap CSS -->

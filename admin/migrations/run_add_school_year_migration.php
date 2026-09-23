@@ -5,7 +5,7 @@
  * Allows proper archival and retrieval by school year
  */
 
-require_once __DIR__ . '/../includes/db_connection.php';
+require_once __DIR__ . '/../../includes/db_connection.php';
 
 // Check if migration already applied
 $check_column = $conn->query("SHOW COLUMNS FROM subjects LIKE 'school_year'");

@@ -5,9 +5,9 @@
  * Purpose: Provides curriculum information for integration with other modules
  * 
  * Usage:
- *   GET /capstone/api/get_curriculum_data.php?id=1
- *   GET /capstone/api/get_curriculum_data.php?subject_id=5
- *   GET /capstone/api/get_curriculum_data.php?status=active
+ *   GET /api/get_curriculum_data.php?id=1
+ *   GET /api/get_curriculum_data.php?subject_id=5
+ *   GET /api/get_curriculum_data.php?status=active
  */
 
 header('Content-Type: application/json');

@@ -5,11 +5,6 @@ if (!isset($_SESSION)) {
 
 // Include database connection for notifications (ensure connection is alive)
 include __DIR__ . '/db_connection.php';
-if (!isset($conn) || !($conn instanceof mysqli) || @($conn->ping()) === false) {
-    // Reinitialize connection if previously closed by a page
-    include __DIR__ . '/db_connection.php';
-}
-
 // Get user information
 $firstName = strtoupper($_SESSION['first_name'] ?? $_SESSION['username'] ?? '');
 $lastName = strtoupper($_SESSION['last_name'] ?? '');
@@ -80,25 +75,25 @@ if (isset($_SESSION['username'])) {
                 $time_ago = floor($time_diff / 86400) . ' days ago';
             }
             // Prefer explicit link stored in DB; fallback to heuristic
-            $destination_url = isset($notification['link']) && $notification['link'] ? $notification['link'] : '/capstone/';
+            $destination_url = isset($notification['link']) && $notification['link'] ? $notification['link'] : '/';
             if (!$destination_url) {
                 $title_lower = strtolower($notification['title']);
                 $message_lower = strtolower($notification['message']);
                 if (strpos($title_lower, 'evaluation') !== false || strpos($message_lower, 'evaluation') !== false) {
                     if ($user_role === 'student') {
-                        $destination_url = '/capstone/student/evaluation_form.php';
+                        $destination_url = '/student/evaluation_form.php';
                     } elseif ($user_role === 'teacher') {
-                        $destination_url = '/capstone/evaluation_result.php';
+                        $destination_url = '/evaluation_result.php';
                     } else {
-                        $destination_url = '/capstone/evaluation_result.php';
+                        $destination_url = '/evaluation_result.php';
                     }
                 } elseif (strpos($title_lower, 'request status updated') !== false || strpos($message_lower, 'request') !== false) {
                     if ($user_role === 'student') {
-                        $destination_url = '/capstone/student/credential_form_request.php';
+                        $destination_url = '/student/credential_form_request.php';
                     } elseif ($user_role === 'registrar') {
-                        $destination_url = '/capstone/registrar/faculty_information_management.php';
+                        $destination_url = '/registrar/faculty_information_management.php';
                     } else {
-                        $destination_url = '/capstone/';
+                        $destination_url = '/';
                     }
                 }
             }
@@ -667,7 +662,7 @@ if (isset($_SESSION['username'])) {
                 <div class="user-role"><?= htmlspecialchars($role) ?></div>
             </div>
             <div class="user-dropdown" id="userDropdown">
-                <a href="/capstone/logout.php">
+                <a href="/logout.php">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>
@@ -723,12 +718,12 @@ function toggleUserDropdown() {
 }
 
 function openNotification(notificationId) {
-    window.location.href = '/capstone/includes/notification_redirect.php?id=' + encodeURIComponent(notificationId);
+    window.location.href = '/includes/notification_redirect.php?id=' + encodeURIComponent(notificationId);
 }
 
 function markAllAsRead() {
     // Make AJAX call to mark all notifications as read
-    fetch('/capstone/includes/mark_all_notifications_read.php', {
+    fetch('/includes/mark_all_notifications_read.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

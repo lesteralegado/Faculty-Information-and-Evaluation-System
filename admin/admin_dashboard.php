@@ -3,7 +3,7 @@ session_start();
 
 // Check if user is logged in and has admin privileges
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
-    header("Location: /capstone/index.php");  
+    header("Location: /index.php");  
     exit();
 }
 
@@ -162,7 +162,7 @@ $fullName = trim($firstName . ' ' . $lastName);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Admin Dashboard</title>
     
     <!-- Bootstrap CSS -->

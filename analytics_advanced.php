@@ -8,7 +8,7 @@ session_start();
 
 // Check if user is logged in
 if (!isset($_SESSION['username'])) {
-    header("Location: /capstone/index.php");  
+    header("Location: /index.php");  
     exit();
 }
 
@@ -281,7 +281,7 @@ while ($row = $whatif_result->fetch_assoc()) {
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -907,7 +907,7 @@ while ($row = $whatif_result->fetch_assoc()) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Analytics Filters: Bi-directional Dynamic Filtering -->
-    <script src="/capstone/js/analytics-filters.js"></script>
+    <script src="/js/analytics-filters.js"></script>
     
     <script>
         // Comparison Chart

@@ -7,22 +7,6 @@
 require_once __DIR__ . '/db_connection.php';
 
 /**
- * Ensure notifications table has a link column for deep-linking
- */
-function ensureNotificationLinkColumn() {
-    global $conn;
-    $hasColumn = false;
-    if ($result = $conn->query("SHOW COLUMNS FROM notifications LIKE 'link'")) {
-        $hasColumn = $result->num_rows > 0;
-        $result->close();
-    }
-    if (!$hasColumn) {
-        // Add nullable link column
-        $conn->query("ALTER TABLE notifications ADD COLUMN link VARCHAR(255) NULL AFTER related_request_id");
-    }
-}
-
-/**
  * Create a notification for a user
  * 
  * @param int $user_id The ID of the user to notify
@@ -36,7 +20,6 @@ function ensureNotificationLinkColumn() {
  */
 function createNotification($user_id, $user_type, $title, $message, $type = 'info', $related_request_id = null, $link = null) {
     global $conn;
-    ensureNotificationLinkColumn();
     
     $stmt = $conn->prepare("
         INSERT INTO notifications (user_id, user_type, title, message, type, related_request_id, link) 
@@ -65,7 +48,6 @@ function notifyAllUsersOfRole($role, $title, $message, $type = 'info', $link = n
     if (!in_array($role, ['student', 'teacher', 'registrar'])) {
         return false;
     }
-    ensureNotificationLinkColumn();
 
     if ($role === 'student') {
         $sql = "INSERT INTO notifications (user_id, user_type, title, message, type, link)
@@ -96,7 +78,6 @@ function notifyAllUsersOfRole($role, $title, $message, $type = 'info', $link = n
  */
 function notifyRegistrarOfNewRequest($credential_type, $student_name, $request_id) {
     global $conn;
-    ensureNotificationLinkColumn();
     
     $stmt = $conn->prepare("
         INSERT INTO notifications (user_id, user_type, title, message, type, related_request_id, link) 
@@ -105,7 +86,7 @@ function notifyRegistrarOfNewRequest($credential_type, $student_name, $request_i
                CONCAT('New ', ?, ' request from ', ?), 
                'info', 
                ?,
-               '/capstone/registrar/faculty_information_management.php'
+               '/registrar/faculty_information_management.php'
         FROM registrar f
     ");
     
@@ -150,7 +131,7 @@ function notifyStudentOfStatusUpdate($student_id, $credential_type, $new_status,
             $notification_type = 'info';
     }
     
-    $link = '/capstone/student/credential_form_request.php';
+    $link = '/student/credential_form_request.php';
     return createNotification($student_id, 'student', $notification_title, $notification_message, $notification_type, $request_id, $link);
 }
 

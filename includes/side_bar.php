@@ -24,27 +24,27 @@ $sidebarLinks = [
         'Credential Request' => ['icon' => 'fa-file-signature', 'url' => 'credential_form_request.php'],
     ] : [
         // Enrolled: full access
-        'Dashboard' => ['icon' => 'fa-home', 'url' => 'student_dashboard.php'],
-        'Credential Request' => ['icon' => 'fa-file-signature', 'url' => 'credential_form_request.php'],
-        'Evaluation Form' => ['icon' => 'fa-check-circle', 'url' => 'evaluation_form.php'],
+        'Dashboard' => ['icon' => 'fa-home', 'url' => '/student/student_dashboard.php'],
+        'Credential Request' => ['icon' => 'fa-file-signature', 'url' => '/student/credential_form_request.php'],
+        'Evaluation Form' => ['icon' => 'fa-check-circle', 'url' => '/student/evaluation_form.php'],
     ],
     'teacher' => [
-        'Dashboard' => ['icon' => 'fa-home', 'url' => '/capstone/teacher/teacher_dashboard.php'],
-        'Evaluation Result' => ['icon' => 'fa-chart-bar', 'url' => '/capstone/evaluation_result.php'],
-        'Data Analytics' => ['icon' => 'fa-chart-line', 'url' => '/capstone/data_analytics.php'],
+        'Dashboard' => ['icon' => 'fa-home', 'url' => '/teacher/teacher_dashboard.php'],
+        'Evaluation Result' => ['icon' => 'fa-chart-bar', 'url' => '/evaluation_result.php'],
+        'Data Analytics' => ['icon' => 'fa-chart-line', 'url' => '/data_analytics.php'],
     ],
     'registrar' => [
-        'Dashboard' => ['icon' => 'fa-home', 'url' => '/capstone/registrar/registrar_dashboard.php'],
-        'Faculty Information' => ['icon' => 'fa-user-graduate', 'url' => '/capstone/registrar/faculty_information_management.php'],
+        'Dashboard' => ['icon' => 'fa-home', 'url' => '/registrar/registrar_dashboard.php'],
+        'Faculty Information' => ['icon' => 'fa-user-graduate', 'url' => '/registrar/faculty_information_management.php'],
     ],
     'admin' => [
-        'Admin Dashboard' => ['icon' => 'fa-user-shield', 'url' => '/capstone/admin/admin_dashboard.php'],
-        'Evaluation Result' => ['icon' => 'fa-chart-bar', 'url' => '/capstone/evaluation_result.php'],
-        'Data Analytics' => ['icon' => 'fa-chart-line', 'url' => '/capstone/data_analytics.php'],
-        'User Management' => ['icon' => 'fa-users-cog', 'url' => '/capstone/admin/user_management.php'],
-        'Section Management' => ['icon' => 'fa-chalkboard', 'url' => '/capstone/admin/section_management.php'],
-        'Subject Management' => ['icon' => 'fa-book', 'url' => '/capstone/admin/subject_management.php'],
-        'Evaluation Management' => ['icon' => 'fa-tasks', 'url' => '/capstone/admin/evaluation_management.php'],
+        'Admin Dashboard' => ['icon' => 'fa-user-shield', 'url' => '/admin/admin_dashboard.php'],
+        'Evaluation Result' => ['icon' => 'fa-chart-bar', 'url' => '/evaluation_result.php'],
+        'Data Analytics' => ['icon' => 'fa-chart-line', 'url' => '/data_analytics.php'],
+        'User Management' => ['icon' => 'fa-users-cog', 'url' => '/admin/user_management.php'],
+        'Section Management' => ['icon' => 'fa-chalkboard', 'url' => '/admin/section_management.php'],
+        'Subject Management' => ['icon' => 'fa-book', 'url' => '/admin/subject_management.php'],
+        'Evaluation Management' => ['icon' => 'fa-tasks', 'url' => '/admin/evaluation_management.php'],
     ],
 ];
 
@@ -256,7 +256,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <div class="school-logo">
-            <img src="/capstone/images/school-logo.png" alt="HRSSI Logo">
+            <img src="/images/school-logo.png" alt="HRSSI Logo">
         </div>
         <h3>Holy Redeemer School<br>of San Isidro</h3>
     </div>

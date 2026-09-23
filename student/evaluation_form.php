@@ -477,7 +477,7 @@ $lastName = strtoupper($_SESSION['last_name'] ?? '');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Subject Evaluation Form</title>
     
     <!-- Bootstrap CSS -->
@@ -1372,9 +1372,9 @@ $lastName = strtoupper($_SESSION['last_name'] ?? '');
                         <div class="comments-section">
                             <h5>Additional Comments (Optional)</h5>
                             <textarea class="form-control" 
-                                      name="comments" 
+                                      name="comments" maxlength="200"
                                       rows="4" 
-                                      placeholder="Share any additional feedback or comments about this subject/teacher..."></textarea>
+                                      placeholder="Share your feedback (maximum 200 characters)..."></textarea>
                         </div>
 
                         <!-- Form Actions -->

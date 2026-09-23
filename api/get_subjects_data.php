@@ -6,8 +6,8 @@
  * Also provides a complete mapping of all subjects with their metadata
  * 
  * Usage:
- *   GET /capstone/api/get_subjects_data.php?year_level=11&strand=STEM
- *   GET /capstone/api/get_subjects_data.php (returns all subjects)
+ *   GET /api/get_subjects_data.php?year_level=11&strand=STEM
+ *   GET /api/get_subjects_data.php (returns all subjects)
  */
 
 header('Content-Type: application/json');

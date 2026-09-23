@@ -12,7 +12,7 @@ session_start();
 
 // Check if user is logged in
 if (!isset($_SESSION['username'])) {
-    header("Location: /capstone/index.php");  
+    header("Location: /index.php");  
     exit();
 }
 
@@ -20,7 +20,7 @@ require_once __DIR__ . '/includes/db_connection.php';
 require_once __DIR__ . '/includes/analytics_filters.php';
 
 // PDF Library - TCPDF (includes will define constants)
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/includes/dependencies.php';
 
 // Shared filters (synced across analytics pages)
 $filterState = analytics_get_filter_state($conn);
@@ -69,6 +69,7 @@ if ($selected_semester !== 'all') {
 // EXPORT: Summary Report (PDF Format)
 // ============================================
 if ($report_type === 'summary_pdf') {
+    app_require_dependencies();
     ob_end_clean();
     $summary = generate_summary_data($conn, $sy_cond, $school_year_label, $semester_label, $selected_year);
     $pdf = generate_pdf_report($summary, $_SESSION['username']);
@@ -980,7 +981,7 @@ ob_end_flush();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Analytics Export Center</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts -->

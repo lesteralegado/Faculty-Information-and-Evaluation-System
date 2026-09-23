@@ -12,6 +12,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
 include '../includes/db_connection.php';
 include '../includes/evaluation_status_helper.php';
 require_once __DIR__ . '/../includes/modern_alert_system.php';
+require_once __DIR__ . '/../includes/dependencies.php';
 
 // Check evaluation status using helper function
 $evalStatus = getEvaluationStatus($conn);
@@ -296,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'success' => true,
                 'html' => $html
             ]);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             echo json_encode([
                 'success' => false,
                 'error' => htmlspecialchars($e->getMessage())
@@ -326,41 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Invalid semester selected.");
             }
 
-            // Check if PhpSpreadsheet is available
-            $phpspreadsheet_available = false;
-            if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-                require_once __DIR__ . '/../vendor/autoload.php';
-                $phpspreadsheet_available = class_exists('PhpOffice\PhpSpreadsheet\IOFactory');
-            }
-            
-            if (!$phpspreadsheet_available) {
-                $manual_paths = [
-                    __DIR__ . '/../includes/phpspreadsheet/src/phpspreadsheet/IOFactory.php',
-                    __DIR__ . '/../includes/phpspreadsheet/src/PhpSpreadsheet/IOFactory.php',
-                ];
-                
-                $found_path = null;
-                foreach ($manual_paths as $path) {
-                    if (file_exists($path)) {
-                        $found_path = $path;
-                        break;
-                    }
-                }
-                
-                if ($found_path) {
-                    if (file_exists(__DIR__ . '/../includes/phpspreadsheet_autoload.php')) {
-                        require_once __DIR__ . '/../includes/phpspreadsheet_autoload.php';
-                    }
-                    if (!class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
-                        require_once $found_path;
-                    }
-                    $phpspreadsheet_available = class_exists('PhpOffice\PhpSpreadsheet\IOFactory');
-                }
-            }
-            
-            if (!$phpspreadsheet_available && !class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
-                throw new Exception("PhpSpreadsheet library is not available. Cannot export to Excel.");
-            }
+            app_require_spreadsheet();
 
             // Query to get categories and questions for the selected filters
             // CRITICAL FIX: Added school_year and semester join conditions to ensure proper data matching
@@ -470,7 +437,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $writer->save('php://output');
             exit();
             
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $_SESSION['error'] = "Excel export failed: " . $e->getMessage();
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
@@ -559,7 +526,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Content-Disposition: attachment; filename="evaluation_set_' . date('Y-m-d_His') . '.json"');
             echo json_encode($export_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             exit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $_SESSION['error'] = "Export failed: " . $e->getMessage();
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
@@ -572,54 +539,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $transaction_started = true;
         
         try {
-            // Check if PhpSpreadsheet is available and load it properly
-            $phpspreadsheet_available = false;
-            
-            // Method 1: Try Composer autoloader (if installed via Composer)
-            if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-                require_once __DIR__ . '/../vendor/autoload.php';
-                $phpspreadsheet_available = class_exists('PhpOffice\PhpSpreadsheet\IOFactory');
-            }
-            
-            // Method 2: Try manual installation with custom autoloader
-            if (!$phpspreadsheet_available) {
-                // Check if PhpSpreadsheet files exist
-                $manual_paths = [
-                    __DIR__ . '/../includes/phpspreadsheet/src/phpspreadsheet/IOFactory.php',  // lowercase (Windows)
-                    __DIR__ . '/../includes/phpspreadsheet/src/PhpSpreadsheet/IOFactory.php',  // uppercase
-                ];
-                
-                $found_path = null;
-                foreach ($manual_paths as $path) {
-                    if (file_exists($path)) {
-                        $found_path = $path;
-                        break;
-                    }
-                }
-                
-                if ($found_path) {
-                    // Load the custom autoloader FIRST (must be loaded BEFORE requiring any PhpSpreadsheet files)
-                    if (file_exists(__DIR__ . '/../includes/phpspreadsheet_autoload.php')) {
-                        require_once __DIR__ . '/../includes/phpspreadsheet_autoload.php';
-                    }
-                    
-                    // Now require IOFactory - the autoloader will handle loading its dependencies
-                    if (!class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
-                        require_once $found_path;
-                    }
-                    $phpspreadsheet_available = class_exists('PhpOffice\PhpSpreadsheet\IOFactory');
-                }
-            }
-            
-            // Method 3: Check if already loaded
-            if (!$phpspreadsheet_available && class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
-                $phpspreadsheet_available = true;
-            }
-            
-            if (!$phpspreadsheet_available) {
-                throw new Exception("PhpSpreadsheet library is not available or not properly installed. Please install it using Composer or manual installation with proper autoloader.");
-            }
-            
+            app_require_spreadsheet();
+
             // Validate file upload
             if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
                 $error_msg = "File upload error";
@@ -857,7 +778,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $_SESSION['success'] = $success_msg;
             
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             // Rollback transaction on error
             if ($transaction_started) {
                 $conn->rollback();
@@ -923,11 +844,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'stop_evaluation_now':
-                // Mark as ended (status=0, clear dates using zero date)
+                // Disable evaluation without writing dates rejected by strict SQL mode.
                 $check = $conn->query("SELECT id FROM evaluation_status ORDER BY id DESC LIMIT 1");
                 if ($check && $check->num_rows > 0) {
                     $row = $check->fetch_assoc();
-                    $stmt = $conn->prepare("UPDATE evaluation_status SET status=0, date_start='0000-00-00 00:00:00', date_end='0000-00-00 00:00:00' WHERE id=?");
+                    $stmt = $conn->prepare("UPDATE evaluation_status SET status=0, date_end=NOW() WHERE id=?");
                     $stmt->bind_param("i", $row['id']);
                     $stmt->execute();
                 }
@@ -983,49 +904,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Check if PhpSpreadsheet is available and load it properly
-$phpspreadsheet_available = false;
-
-// Method 1: Try Composer autoloader (if installed via Composer)
-if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    require_once __DIR__ . '/../vendor/autoload.php';
-    $phpspreadsheet_available = class_exists('PhpOffice\PhpSpreadsheet\IOFactory');
-}
-
-// Method 2: Try manual installation with custom autoloader
-if (!$phpspreadsheet_available) {
-    // Check if PhpSpreadsheet files exist
-    $manual_paths = [
-        __DIR__ . '/../includes/phpspreadsheet/src/phpspreadsheet/IOFactory.php',  // lowercase (Windows)
-        __DIR__ . '/../includes/phpspreadsheet/src/PhpSpreadsheet/IOFactory.php',  // uppercase
-    ];
-    
-    $found_path = null;
-    foreach ($manual_paths as $path) {
-        if (file_exists($path)) {
-            $found_path = $path;
-            break;
-        }
-    }
-    
-    if ($found_path) {
-        // Load the custom autoloader FIRST (must be loaded BEFORE requiring any PhpSpreadsheet files)
-        if (file_exists(__DIR__ . '/../includes/phpspreadsheet_autoload.php')) {
-            require_once __DIR__ . '/../includes/phpspreadsheet_autoload.php';
-        }
-        
-        // Now require IOFactory - the autoloader will handle loading its dependencies
-        if (!class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
-            require_once $found_path;
-        }
-        $phpspreadsheet_available = class_exists('PhpOffice\PhpSpreadsheet\IOFactory');
-    }
-}
-
-// Method 3: Check if already loaded
-if (!$phpspreadsheet_available && class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
-    $phpspreadsheet_available = true;
-}
+// Preliminary UI check; Excel actions validate the complete libraries and extensions.
+$phpspreadsheet_available = is_readable(__DIR__ . '/../vendor/autoload.php')
+    && PHP_VERSION_ID >= 80200 && PHP_INT_SIZE === 8;
 
 // Fetch available school years and semesters for export dropdowns
 $available_school_years = [];
@@ -1128,7 +1009,7 @@ $stats = $stats_result->fetch_assoc();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Evaluation Management</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">

@@ -3,14 +3,14 @@ session_start();
 
 // Check if user is logged in
 if (!isset($_SESSION['username'])) {
-    header("Location: /capstone/index.php");  
+    header("Location: /index.php");  
     exit();
 }
 
 // Check if user has access to data analytics (allow teacher and admin only)
 $userRole = $_SESSION['role'] ?? '';
 if ($userRole === 'registrar') {
-    header("Location: /capstone/registrar/registrar_dashboard.php?error=access_denied");
+    header("Location: /registrar/registrar_dashboard.php?error=access_denied");
     exit();
 }
 
@@ -534,7 +534,7 @@ $bias_detections = detect_bias($teacher_performance);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Data Analytics Dashboard</title>
     
     <!-- Bootstrap CSS -->

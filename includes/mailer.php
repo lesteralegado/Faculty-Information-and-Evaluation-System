@@ -143,9 +143,14 @@ function sendEmailViaSMTP(
     // Log the email sending attempt
     error_log('[Mailer] Attempting to send email: To=' . $toEmail . ', Subject=' . $subject . ', From=' . $fromEmail);
 
-    // Load PHPMailer if available
-    if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-        require_once __DIR__ . '/../vendor/autoload.php';
+    // An incomplete Composer upload should return a mail error, not terminate the request.
+    try {
+        require_once __DIR__ . '/dependencies.php';
+        app_require_dependencies();
+    } catch (Throwable $error) {
+        error_log('[Mailer] Library initialization failed: ' . $error->getMessage());
+        $errorMessage = 'Email delivery is unavailable. Please contact the administrator.';
+        return false;
     }
 
     if (class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {

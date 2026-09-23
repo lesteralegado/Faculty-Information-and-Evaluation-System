@@ -16,7 +16,7 @@
 
 class DynamicDropdownSystem {
     constructor(config = {}) {
-        this.apiUrl = config.apiUrl || '/capstone/api/get_subjects_data.php';
+        this.apiUrl = config.apiUrl || '/api/get_subjects_data.php';
         this.yearLevelSelectId = config.yearLevelSelectId || 'year_level';
         this.strandSelectId = config.strandSelectId || 'strand';
         this.subjectSelectId = config.subjectSelectId || 'subject_name';

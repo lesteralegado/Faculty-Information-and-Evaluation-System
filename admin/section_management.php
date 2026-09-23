@@ -117,102 +117,7 @@ function getTeacherRoleFromSubjectTeacherAssignments(mysqli $conn, int $subject_
     return $legacy;
 }
 
-/** Preferred multi-teacher model per SY/Sem (must exist before validating section assignments against Subject Management). */
-function ensureSubjectTeacherAssignmentsTableExists(mysqli $conn): void {
-    $conn->query(
-        "CREATE TABLE IF NOT EXISTS subject_teacher_assignments (
-            assignment_id INT(11) NOT NULL AUTO_INCREMENT,
-            subject_id INT(11) NOT NULL,
-            teacher_id INT(11) NOT NULL,
-            school_year VARCHAR(9) NOT NULL,
-            semester TINYINT(1) NOT NULL,
-            role ENUM('primary','assistant') NOT NULL DEFAULT 'primary',
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (assignment_id),
-            UNIQUE KEY uniq_subject_teacher_term (subject_id, teacher_id, school_year, semester),
-            KEY idx_subject_term (subject_id, school_year, semester),
-            KEY idx_teacher_term (teacher_id, school_year, semester)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-    );
-}
-
-/** Ensure junction table for section + subject + teacher exists (per school year / semester). */
-function ensureSectionSubjectTeacherAssignmentsTable(mysqli $conn): void {
-    $migrationFile = __DIR__ . '/migrations/001_create_section_subject_teacher_assignments.sql';
-    if (is_readable($migrationFile)) {
-        $sql = file_get_contents($migrationFile);
-        if ($sql !== false && $conn->multi_query($sql)) {
-            while ($conn->more_results() && $conn->next_result()) {
-                // flush
-            }
-        }
-        return;
-    }
-    $conn->query(
-        "CREATE TABLE IF NOT EXISTS `section_subject_teacher_assignments` (
-          `assignment_id` int(11) NOT NULL AUTO_INCREMENT,
-          `section_id` int(11) NOT NULL,
-          `subject_id` int(11) NOT NULL,
-          `teacher_id` int(11) NOT NULL,
-          `school_year` varchar(9) NOT NULL,
-          `semester` tinyint(1) NOT NULL,
-          `role` enum('primary','assistant') NOT NULL DEFAULT 'primary',
-          `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-          `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-          PRIMARY KEY (`assignment_id`),
-          UNIQUE KEY `uniq_section_subject_term` (`section_id`,`subject_id`,`school_year`,`semester`),
-          UNIQUE KEY `uniq_section_subject_teacher` (`section_id`,`subject_id`,`teacher_id`,`school_year`,`semester`),
-          KEY `idx_section_term` (`section_id`,`school_year`,`semester`),
-          KEY `idx_subject` (`subject_id`),
-          KEY `idx_teacher` (`teacher_id`),
-          CONSTRAINT `fk_section_subject_teacher_section` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`) ON DELETE CASCADE,
-          CONSTRAINT `fk_section_subject_teacher_subject` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`subject_id`) ON DELETE CASCADE,
-          CONSTRAINT `fk_section_subject_teacher_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `teachers` (`teacher_id`) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-    );
-
-    // Enforce one teacher per section+subject+term even on pre-existing schemas.
-    $idxRes = $conn->query("SHOW INDEX FROM section_subject_teacher_assignments WHERE Key_name = 'uniq_section_subject_term'");
-    if ($idxRes && $idxRes->num_rows === 0) {
-        $conn->query(
-            "ALTER TABLE section_subject_teacher_assignments
-             ADD UNIQUE KEY uniq_section_subject_term (section_id, subject_id, school_year, semester)"
-        );
-    }
-}
-
-/**
- * Drop legacy sections.teacher_id (single adviser); teacher linkage is via section_subject_teacher_assignments.
- */
-function tryDropLegacySectionsTeacherId(mysqli $conn): void {
-    $check = $conn->query("SHOW COLUMNS FROM sections LIKE 'teacher_id'");
-    if (!$check || $check->num_rows === 0) {
-        return;
-    }
-    $dbRes = $conn->query("SELECT DATABASE()");
-    $dbName = $dbRes ? ($dbRes->fetch_row()[0] ?? '') : '';
-    if ($dbName === '') {
-        return;
-    }
-    $fkStmt = $conn->prepare(
-        "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
-         WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'sections' AND COLUMN_NAME = 'teacher_id'
-         AND REFERENCED_TABLE_NAME IS NOT NULL"
-    );
-    if ($fkStmt) {
-        $fkStmt->bind_param('s', $dbName);
-        $fkStmt->execute();
-        $fkRes = $fkStmt->get_result();
-        while ($row = $fkRes->fetch_assoc()) {
-            $cname = preg_replace('/[^a-zA-Z0-9_]/', '', $row['CONSTRAINT_NAME'] ?? '');
-            if ($cname !== '') {
-                $conn->query("ALTER TABLE sections DROP FOREIGN KEY `" . $cname . "`");
-            }
-        }
-        $fkStmt->close();
-    }
-    $conn->query("ALTER TABLE sections DROP COLUMN teacher_id");
-}
+// Database schema is installed with deployment/schema-repair.sql, not during requests.
 
 /** Build Location URL after POST (preserve assignments tab + selected section). */
 function section_management_redirect_after_post(): string {
@@ -230,25 +135,7 @@ function section_management_redirect_after_post(): string {
     return $base . ($qs ? '?' . http_build_query($qs) : '');
 }
 
-// Add missing columns if they don't exist
-$check_status_column = $conn->query("SHOW COLUMNS FROM sections LIKE 'status'");
-if ($check_status_column->num_rows == 0) {
-    $conn->query("ALTER TABLE sections ADD COLUMN status ENUM('active', 'archived') DEFAULT 'active'");
-}
-
-// Fix section_id if it's not properly configured as AUTO_INCREMENT
-$check_pk = $conn->query("SHOW COLUMNS FROM sections LIKE 'section_id'");
-if ($check_pk->num_rows > 0) {
-    $column_info = $check_pk->fetch_assoc();
-    if (strpos($column_info['Extra'], 'auto_increment') === false) {
-        // Modify the section_id column to be AUTO_INCREMENT
-        $conn->query("ALTER TABLE sections MODIFY COLUMN section_id INT NOT NULL AUTO_INCREMENT");
-    }
-}
-
-ensureSectionSubjectTeacherAssignmentsTable($conn);
-ensureSubjectTeacherAssignmentsTableExists($conn);
-tryDropLegacySectionsTeacherId($conn);
+// Database schema is installed with deployment/schema-repair.sql, not during requests.
 
 // Active term from system settings — Subject Management saves subject_teacher_assignments ONLY for this (school_year + semester).
 $current_sy_result = $conn->query("SELECT school_year, semester FROM currentschoolyearandsemester LIMIT 1");
@@ -816,7 +703,7 @@ if ($sm_tab === 'assignments') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Section Management</title>
     
     <!-- Bootstrap CSS -->

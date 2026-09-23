@@ -47,10 +47,9 @@ if ($user_role === 'student') {
         $current_user_id = $user_data['user_id'];
     }
     $user_stmt->close();
-} elseif ($user_role === 'faculty' || $user_role === 'admin') {
-    $user_stmt = $conn->prepare("SELECT u.user_id FROM faculty f 
-                                 JOIN users u ON f.user_id = u.user_id 
-                                 WHERE u.account_number = ?");
+} elseif ($user_role === 'registrar' || $user_role === 'admin') {
+    $user_stmt = $conn->prepare("SELECT u.user_id FROM users u
+                                 WHERE u.account_number = ? AND u.role IN ('admin', 'registrar')");
     $user_stmt->bind_param("s", $username);
     $user_stmt->execute();
     $user_result = $user_stmt->get_result();

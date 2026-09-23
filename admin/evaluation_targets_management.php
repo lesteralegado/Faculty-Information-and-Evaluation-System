@@ -13,24 +13,7 @@ function normalize_sy(string $sy): string {
     return str_replace(["–", "—"], "-", trim($sy));
 }
 
-// Ensure table exists (safe if migration script wasn't run yet)
-$conn->query(
-    "CREATE TABLE IF NOT EXISTS evaluation_targets (
-      evaluation_target_id INT(11) NOT NULL AUTO_INCREMENT,
-      school_year VARCHAR(9) NOT NULL,
-      semester TINYINT(1) NOT NULL,
-      section_id INT(11) NOT NULL,
-      subject_id INT(11) NOT NULL,
-      teacher_id INT(11) NOT NULL,
-      is_active TINYINT(1) NOT NULL DEFAULT 1,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (evaluation_target_id),
-      UNIQUE KEY uniq_target (school_year, semester, section_id, subject_id, teacher_id),
-      KEY idx_term_section (school_year, semester, section_id),
-      KEY idx_term_teacher (school_year, semester, teacher_id),
-      KEY idx_term_subject (school_year, semester, subject_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-);
+// Database schema is installed with deployment/schema-repair.sql, not during requests.
 
 // Fetch current SY/Sem
 $ctx_stmt = $conn->prepare("SELECT school_year, semester FROM currentschoolyearandsemester LIMIT 1");
@@ -54,15 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     $conn->begin_transaction();
     try {
-        $migr = __DIR__ . '/migrations/001_create_section_subject_teacher_assignments.sql';
-        if (is_readable($migr)) {
-            $migr_sql = file_get_contents($migr);
-            if ($migr_sql !== false && $conn->multi_query($migr_sql)) {
-                while ($conn->more_results() && $conn->next_result()) {
-                }
-            }
-        }
-
         // Clear existing targets for this term (regenerate deterministically)
         $del = $conn->prepare("DELETE FROM evaluation_targets WHERE school_year = ? AND semester = ?");
         $del->bind_param("si", $school_year, $semester);
@@ -198,7 +172,7 @@ $t_stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Evaluation Targets</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">

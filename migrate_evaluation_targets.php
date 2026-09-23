@@ -3,7 +3,7 @@
  * One-time migration script:
  * - Creates evaluation_targets table for explicit per-term evaluation assignment
  *
- * Run in browser (admin): http://localhost/capstone/migrate_evaluation_targets.php
+ * Run in browser (admin): http://localhost/migrate_evaluation_targets.php
  * Or CLI: php migrate_evaluation_targets.php
  */
 session_start();

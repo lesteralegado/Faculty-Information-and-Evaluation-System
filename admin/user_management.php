@@ -14,7 +14,7 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['role'])) {
 // Include database connection and helper
 include '../includes/db_connection.php';
 include '../includes/evaluation_status_helper.php';
-require_once '../vendor/autoload.php';
+require_once __DIR__ . '/../includes/dependencies.php';
 require_once __DIR__ . '/../includes/modern_alert_system.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -152,6 +152,7 @@ function validateImportRow($row, $line_number, &$errors, &$valid_rows, $existing
 }
 
 if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
+    app_require_spreadsheet();
     // Clear output buffers to prevent corruption of Excel file
     while (ob_get_level() > 0) {
         ob_end_clean();
@@ -863,6 +864,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'import_excel':
+                try {
+                    app_require_spreadsheet();
+                } catch (Throwable $error) {
+                    error_log('Spreadsheet initialization failed: ' . $error->getMessage());
+                    $_SESSION['error'] = 'Excel import is unavailable. Ask the administrator to check the installed libraries.';
+                    break;
+                }
                 if (!isset($_FILES['excel_file']) || $_FILES['excel_file']['error'] !== UPLOAD_ERR_OK) {
                     $_SESSION['error'] = "Please upload a valid Excel file.";
                     break;
@@ -1108,11 +1116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         $conn->commit();
                         $_SESSION['success'] = "Import completed. Successfully added {$imported_count} user(s).";
-                    } catch (Exception $import_exception) {
+                    } catch (Throwable $import_exception) {
                         $conn->rollback();
                         $_SESSION['error'] = "Import failed: " . $import_exception->getMessage();
                     }
-                } catch (Exception $sheet_exception) {
+                } catch (Throwable $sheet_exception) {
                     $_SESSION['error'] = "Unable to read Excel file. Please check the file content and format.";
                 }
                 break;
@@ -1233,7 +1241,7 @@ $stats = $stats_result->fetch_assoc();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>User Management</title>
     
     <!-- Bootstrap CSS -->

@@ -14,20 +14,20 @@ require_once __DIR__ . '/includes/student_access_control.php';
 if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
     switch ($_SESSION['role']) {
         case 'admin':
-            header("Location: /capstone/admin/admin_dashboard.php");
+            header("Location: /admin/admin_dashboard.php");
             exit();
         case 'registrar':
-            header("Location: /capstone/registrar/registrar_dashboard.php");
+            header("Location: /registrar/registrar_dashboard.php");
             exit();
         case 'teacher':
-            header("Location: /capstone/teacher/teacher_dashboard.php");
+            header("Location: /teacher/teacher_dashboard.php");
             exit();
         case 'student':
             // Inactive students are restricted to Credential Request only
             if (isset($_SESSION['status']) && strtolower((string)$_SESSION['status']) !== 'active') {
-                header("Location: /capstone/student/credential_form_request.php?restricted=inactive");
+                header("Location: /student/credential_form_request.php?restricted=inactive");
             } else {
-                header("Location: /capstone/student/student_dashboard.php");
+                header("Location: /student/student_dashboard.php");
             }
             exit();
     }
@@ -94,18 +94,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             switch ($role) {
                 case 'admin':
-                    header("Location: /capstone/admin/admin_dashboard.php");
+                    header("Location: /admin/admin_dashboard.php");
                     break;
                 case 'registrar':
-                    header("Location: /capstone/registrar/registrar_dashboard.php");
+                    header("Location: /registrar/registrar_dashboard.php");
                     break;
                 case 'teacher':
-                    header("Location: /capstone/teacher/teacher_dashboard.php");
+                    header("Location: /teacher/teacher_dashboard.php");
                     break;
                 case 'student':
                     // Inactive students can log in but are restricted to Credential Request.
                     if ($statusNorm !== 'active') {
-                        header("Location: /capstone/student/credential_form_request.php?restricted=inactive");
+                        header("Location: /student/credential_form_request.php?restricted=inactive");
                         break;
                     }
 
@@ -114,12 +114,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (isset($_SESSION['user_id'])) {
                         $ctx = getStudentAccessContext($conn, (int)$_SESSION['user_id']);
                         if (!empty($ctx['enrolled'])) {
-                            header("Location: /capstone/student/student_dashboard.php");
+                            header("Location: /student/student_dashboard.php");
                         } else {
-                            header("Location: /capstone/student/credential_form_request.php?restricted=1");
+                            header("Location: /student/credential_form_request.php?restricted=1");
                         }
                     } else {
-                        header("Location: /capstone/student/student_dashboard.php");
+                        header("Location: /student/student_dashboard.php");
                     }
                     break;
             }

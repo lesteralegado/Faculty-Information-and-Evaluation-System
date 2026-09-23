@@ -7,7 +7,7 @@
             setTimeout(() => {
                 if (!addSubjectDropdown || !addSubjectDropdown.isInitialized) {
                     addSubjectDropdown = new DynamicDropdownSystem({
-                        apiUrl: '/capstone/api/get_subjects_data.php',
+                        apiUrl: '/api/get_subjects_data.php',
                         yearLevelSelectId: 'add_year_level',
                         strandSelectId: 'add_strand',
                         subjectSelectId: 'add_subject_name'
@@ -22,7 +22,7 @@
             setTimeout(() => {
                 if (!editSubjectDropdown || !editSubjectDropdown.isInitialized) {
                     editSubjectDropdown = new DynamicDropdownSystem({
-                        apiUrl: '/capstone/api/get_subjects_data.php',
+                        apiUrl: '/api/get_subjects_data.php',
                         yearLevelSelectId: 'edit_year_level',
                         strandSelectId: 'edit_strand',
                         subjectSelectId: 'edit_subject_name'

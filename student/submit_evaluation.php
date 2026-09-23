@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 require_once __DIR__ . '/../includes/student_access_control.php';
@@ -117,21 +117,7 @@ if ($teacher_id <= 0) {
     exit();
 }
 
-// Ensure evaluation_targets table exists (in case migrations weren't run yet)
-$conn->query(
-    "CREATE TABLE IF NOT EXISTS evaluation_targets (
-      evaluation_target_id INT(11) NOT NULL AUTO_INCREMENT,
-      school_year VARCHAR(9) NOT NULL,
-      semester TINYINT(1) NOT NULL,
-      section_id INT(11) NOT NULL,
-      subject_id INT(11) NOT NULL,
-      teacher_id INT(11) NOT NULL,
-      is_active TINYINT(1) NOT NULL DEFAULT 1,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (evaluation_target_id),
-      UNIQUE KEY uniq_target (school_year, semester, section_id, subject_id, teacher_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-);
+// Database schema is installed with deployment/schema-repair.sql, not during requests.
 
 // Validate evaluation target: Check if target exists in evaluation_targets table
 // For target_id = 0 (fallback mode), verify teacher exists for the subject instead
@@ -274,102 +260,18 @@ $subject_row = $subject_result->fetch_assoc();
 $subject_name = $subject_row['subject_name'] ?? 'Unknown Subject';
 $subject_stmt->close();
 
-$conn->begin_transaction();
-$insert_success = true;
-$last_error = "";
-$rows_inserted = 0;
-
-// Insert parent evaluation row first (current normalized schema)
-$eval_insert_sql = "INSERT INTO evaluations (student_id, teacher_id, subject_id, school_year, semester) VALUES (?, ?, ?, ?, ?)";
-$eval_stmt = $conn->prepare($eval_insert_sql);
-if (!$eval_stmt) {
-    $insert_success = false;
-    $last_error = "Prepare failed for evaluations insert: " . $conn->error;
-}
-
-$evaluation_id = 0;
-if ($insert_success) {
-    $eval_stmt->bind_param("iiisi", $student_id, $teacher_id, $subject_id, $school_year_norm, $current_semester_num);
-    if (!$eval_stmt->execute()) {
-        $insert_success = false;
-        $last_error = "Execute failed for evaluations insert: " . $eval_stmt->error;
-    } else {
-        $evaluation_id = (int)$conn->insert_id;
-    }
-    $eval_stmt->close();
-}
-
-foreach ($answered_question_ids as $question_id => $rating) {
-    if (!$insert_success) {
-        break;
-    }
-    $question_info = $questions_list[$question_id];
-    $response_insert_sql = "INSERT INTO evaluation_responses (evaluation_id, question_id, response) VALUES (?, ?, ?)";
-
-    $response_stmt = $conn->prepare($response_insert_sql);
-    if (!$response_stmt) {
-        $insert_success = false;
-        $last_error = "Prepare failed: " . $conn->error;
-        break;
-    }
-
-    $response_stmt->bind_param("iii", $evaluation_id, $question_id, $rating);
-
-    if (!$response_stmt->execute()) {
-        $insert_success = false;
-        $last_error = "Execute failed for question $question_id: " . $response_stmt->error;
-        $response_stmt->close();
-        break;
-    }
-    $rows_inserted++;
-    $response_stmt->close();
-}
-
-if ($insert_success && $rows_inserted === count($answered_question_ids)) {
-    // Ensure evaluation_comments table exists (without strict foreign key for compatibility)
-    $conn->query(
-        "CREATE TABLE IF NOT EXISTS evaluation_comments (
-          comment_id INT(11) NOT NULL AUTO_INCREMENT,
-          student_id INT(11) NOT NULL,
-          teacher_id INT(11) NOT NULL,
-          subject_id INT(11) NOT NULL,
-          comment LONGTEXT NOT NULL,
-          school_year VARCHAR(9) NOT NULL,
-          semester TINYINT(4) NOT NULL,
-          PRIMARY KEY (comment_id),
-          KEY idx_student (student_id),
-          KEY idx_teacher (teacher_id),
-          KEY idx_subject (subject_id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-    );
-    
-    // Store comments if provided
-    $comments = isset($evaluation_data['comments']) ? trim((string)$evaluation_data['comments']) : '';
-    
-    if ($comments !== '') {
-        $comment_insert_sql = "INSERT INTO evaluation_comments (student_id, teacher_id, subject_id, comment, school_year, semester) VALUES (?, ?, ?, ?, ?, ?)";
-        $comment_stmt = $conn->prepare($comment_insert_sql);
-        
-        if ($comment_stmt) {
-            $comment_stmt->bind_param("iiissi", $student_id, $teacher_id, $subject_id, $comments, $school_year_norm, $current_semester_num);
-            if (!$comment_stmt->execute()) {
-                // Log error but don't fail the evaluation - comments are optional
-                error_log("Comment insertion failed for student_id $student_id, teacher_id $teacher_id, subject_id $subject_id: " . $comment_stmt->error);
-            }
-            $comment_stmt->close();
-        }
-    }
-    
-    $conn->commit();
+require_once __DIR__ . '/../includes/evaluation_submission.php';
+try {
+    app_save_evaluation($conn, $student_id, $teacher_id, $subject_id, $school_year_norm,
+        $current_semester_num, $answered_question_ids, (string)($evaluation_data['comments'] ?? ''));
     unset($_SESSION['evaluation_data']);
     header("Location: evaluation_form.php?success=1&subject=" . urlencode($subject_name) . "&rating=" . urlencode((string)$overall_rating));
     exit();
+} catch (InvalidArgumentException $error) {
+    $message = $error->getMessage();
+} catch (Throwable $error) {
+    error_log('Evaluation submission failed: ' . $error->getMessage());
+    $message = 'Your evaluation could not be saved. Please try again or contact the administrator.';
 }
-
-$conn->rollback();
-error_log("Evaluation submission failed: " . $last_error);
-if ($last_error === "") {
-    $last_error = "Could not save evaluation responses.";
-}
-header("Location: evaluation_form.php?error=submission_failed&message=" . urlencode($last_error));
+header("Location: evaluation_form.php?error=submission_failed&message=" . urlencode($message));
 exit();

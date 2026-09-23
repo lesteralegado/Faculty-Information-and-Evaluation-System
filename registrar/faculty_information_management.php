@@ -3,7 +3,7 @@ session_start();
 
 // Check if user is logged in and is registrar or admin
 if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['registrar', 'admin'])) {
-    header("Location: /capstone/index.php");
+    header("Location: /index.php");
     exit();
 }
 
@@ -95,7 +95,7 @@ $requests_stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Faculty Information Management</title>
     
     <!-- Bootstrap CSS -->

@@ -10,7 +10,7 @@
 
 class AnalyticsFilterSystem {
     constructor(config = {}) {
-        this.apiUrl = config.apiUrl || '/capstone/api/get_filter_options.php';
+        this.apiUrl = config.apiUrl || '/api/get_filter_options.php';
         this.yearSelectId = config.yearSelectId || 'yearFilter';
         this.semesterSelectId = config.semesterSelectId || 'semesterFilter';
         this.subjectSelectId = config.subjectSelectId || 'subjectFilter';

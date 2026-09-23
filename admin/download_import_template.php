@@ -13,7 +13,8 @@ if ($_SESSION['role'] !== 'admin') {
     exit();
 }
 
-require_once '../vendor/autoload.php';
+require_once __DIR__ . '/../includes/dependencies.php';
+app_require_spreadsheet();
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;

@@ -3,7 +3,7 @@ if (!isset($_SESSION)) { session_start(); }
 
 // Require auth
 if (!isset($_SESSION['username'])) {
-    header('Location: /capstone/login.php');
+    header('Location: /login.php');
     exit();
 }
 
@@ -11,7 +11,7 @@ require_once __DIR__ . '/db_connection.php';
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id <= 0) {
-    header('Location: /capstone/index.php');
+    header('Location: /index.php');
     exit();
 }
 
@@ -51,7 +51,7 @@ $notif = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$notif) {
-    header('Location: /capstone/index.php');
+    header('Location: /index.php');
     exit();
 }
 
@@ -69,26 +69,26 @@ $message_lower = strtolower($notif['message']);
 if (!$link) {
     if (strpos($title_lower, 'evaluation') !== false || strpos($message_lower, 'evaluation') !== false) {
         if ($role === 'student') {
-            $link = '/capstone/student/evaluation_form.php';
+            $link = '/student/evaluation_form.php';
         } else {
-            $link = '/capstone/evaluation_result.php';
+            $link = '/evaluation_result.php';
         }
     } elseif (strpos($title_lower, 'request') !== false) {
         if ($role === 'student') {
-            $link = '/capstone/student/credential_form_request.php';
+            $link = '/student/credential_form_request.php';
         } elseif ($role === 'registrar') {
-            $link = '/capstone/registrar/faculty_information_management.php';
+            $link = '/registrar/faculty_information_management.php';
         } else {
-            $link = '/capstone/';
+            $link = '/';
         }
     } else {
-        $link = '/capstone/';
+        $link = '/';
     }
 }
 
 // Final safety: normalize to existing root-prefixed path
-if (strpos($link, '/capstone/') !== 0) {
-    $link = '/capstone/' . ltrim($link, '/');
+if (strpos($link, '/') !== 0) {
+    $link = '/' . ltrim($link, '/');
 }
 
 header('Location: ' . $link);

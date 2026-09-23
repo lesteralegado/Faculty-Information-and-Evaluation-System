@@ -4,7 +4,7 @@
  * - Creates subject_teacher_assignments table (multi-teacher per subject, per SY/Sem)
  * - Backfills assignments from subjects.teacher_id for the CURRENT SY/Sem (best-effort)
  *
- * Run in browser: http://localhost/capstone/migrate_subject_teacher_assignments.php
+ * Run in browser: http://localhost/migrate_subject_teacher_assignments.php
  * Or CLI: php migrate_subject_teacher_assignments.php
  */
 session_start();

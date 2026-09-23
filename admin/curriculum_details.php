@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (curriculum_id, resource_type, title, description, url, author)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
-            $stmt->bind_param("issss", $curriculum_id, $resource_type, $title, $description, $url, $author);
+            $stmt->bind_param("isssss", $curriculum_id, $resource_type, $title, $description, $url, $author);
 
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Resource added successfully!";

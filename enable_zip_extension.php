@@ -233,7 +233,7 @@ $gd_enabled = extension_loaded('gd');
             <h5>Alternative: Check PHP Info</h5>
             <p>Create a file called <code style="display: inline; padding: 2px 5px;">phpinfo.php</code> in your <code style="display: inline; padding: 2px 5px;">C:\xampp\htdocs\capstone</code> directory with this content:</p>
             <code>&lt;?php phpinfo(); ?&gt;</code>
-            <p>Then visit <code style="display: inline; padding: 2px 5px;">http://localhost/capstone/phpinfo.php</code> and search for "zip" to see detailed extension information</p>
+            <p>Then visit <code style="display: inline; padding: 2px 5px;">http://localhost/phpinfo.php</code> and search for "zip" to see detailed extension information</p>
         </div>
 
         <h3>Contact Support</h3>

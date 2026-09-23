@@ -5,7 +5,7 @@
  * This script archives all currently active subjects and restores all archived subjects to active status.
  * Run this once to perform the swap, then delete this file.
  * 
- * Access: http://localhost/capstone/admin/migrations/swap_active_archived_subjects.php
+ * Access: http://localhost/admin/migrations/swap_active_archived_subjects.php
  */
 
 session_start();
@@ -236,7 +236,7 @@ include '../../includes/db_connection.php';
                     `;
                     btnText.textContent = 'Swap Complete';
                     setTimeout(() => {
-                        window.location.href = '/capstone/admin/subject_management.php';
+                        window.location.href = '/admin/subject_management.php';
                     }, 2000);
                 } else {
                     resultBox.classList.add('error');

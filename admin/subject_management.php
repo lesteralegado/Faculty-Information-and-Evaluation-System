@@ -16,28 +16,9 @@ function normalizeSchoolYear(string $sy): string {
 }
 
 function subjectManagementEnsureSpreadsheet(): bool {
-    if (class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
-        return true;
-    }
-    if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-        require_once __DIR__ . '/../vendor/autoload.php';
-    }
-    if (!class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
-        $manualPaths = [
-            __DIR__ . '/../includes/phpspreadsheet/src/phpspreadsheet/IOFactory.php',
-            __DIR__ . '/../includes/phpspreadsheet/src/PhpSpreadsheet/IOFactory.php',
-        ];
-        foreach ($manualPaths as $path) {
-            if (file_exists($path)) {
-                if (file_exists(__DIR__ . '/../includes/phpspreadsheet_autoload.php')) {
-                    require_once __DIR__ . '/../includes/phpspreadsheet_autoload.php';
-                }
-                require_once $path;
-                break;
-            }
-        }
-    }
-    return class_exists('PhpOffice\PhpSpreadsheet\IOFactory');
+    require_once __DIR__ . '/../includes/dependencies.php';
+    app_require_spreadsheet();
+    return true;
 }
 
 /** Convert column index (1-based) to column letter (A, B, Z, AA, etc.) */
@@ -918,64 +899,7 @@ $evaluation_start_date = $evalStatus['start_date'];
 $evaluation_end_date = $evalStatus['end_date'];
 $evaluation_phase = $evalStatus['phase'];
 
-$check_teacher_column = $conn->query("SHOW COLUMNS FROM subjects LIKE 'teacher_id'");
-if ($check_teacher_column->num_rows == 0) {
-    $conn->query("ALTER TABLE subjects ADD COLUMN teacher_id INT DEFAULT NULL");
-}
-
-$check_status_column = $conn->query("SHOW COLUMNS FROM subjects LIKE 'status'");
-if ($check_status_column->num_rows == 0) {
-    $conn->query("ALTER TABLE subjects ADD COLUMN status ENUM('active', 'archived') DEFAULT 'active'");
-}
-
-$check_subject_semester = $conn->query("SHOW COLUMNS FROM subjects LIKE 'semester'");
-if ($check_subject_semester->num_rows == 0) {
-    $conn->query("ALTER TABLE subjects ADD COLUMN semester TINYINT(1) NOT NULL DEFAULT 1");
-}
-
-// Create assignment table if missing (preferred multi-teacher model, per SY/Sem)
-$conn->query(
-    "CREATE TABLE IF NOT EXISTS subject_teacher_assignments (
-        assignment_id INT(11) NOT NULL AUTO_INCREMENT,
-        subject_id INT(11) NOT NULL,
-        teacher_id INT(11) NOT NULL,
-        school_year VARCHAR(9) NOT NULL,
-        semester TINYINT(1) NOT NULL,
-        role ENUM('primary','assistant') NOT NULL DEFAULT 'primary',
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (assignment_id),
-        UNIQUE KEY uniq_subject_teacher_term (subject_id, teacher_id, school_year, semester),
-        KEY idx_subject_term (subject_id, school_year, semester),
-        KEY idx_teacher_term (teacher_id, school_year, semester)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-);
-
-$conn->query(
-    "CREATE TABLE IF NOT EXISTS curriculum_import_log (
-        log_id INT NOT NULL AUTO_INCREMENT,
-        school_year VARCHAR(30) NOT NULL,
-        semester TINYINT(1) NOT NULL,
-        subjects_imported INT NOT NULL DEFAULT 0,
-        subjects_archived INT NOT NULL DEFAULT 0,
-        archive_batch_id VARCHAR(36) NOT NULL,
-        file_name VARCHAR(255) DEFAULT NULL,
-        imported_by_username VARCHAR(150) DEFAULT NULL,
-        imported_by_user_id INT DEFAULT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (log_id),
-        KEY idx_curriculum_log_sy_sem (school_year, semester),
-        KEY idx_curriculum_log_created (created_at)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
-);
-
-$chk_archived_at = $conn->query("SHOW COLUMNS FROM subjects LIKE 'archived_at'");
-if ($chk_archived_at && $chk_archived_at->num_rows === 0) {
-    $conn->query("ALTER TABLE subjects ADD COLUMN archived_at DATETIME NULL DEFAULT NULL");
-}
-$chk_archive_batch = $conn->query("SHOW COLUMNS FROM subjects LIKE 'archive_batch_id'");
-if ($chk_archive_batch && $chk_archive_batch->num_rows === 0) {
-    $conn->query("ALTER TABLE subjects ADD COLUMN archive_batch_id VARCHAR(36) NULL DEFAULT NULL");
-}
+// Database schema is installed with deployment/schema-repair.sql, not during requests.
 
 $subject_has_archive_meta = false;
 $chk_aa = $conn->query("SHOW COLUMNS FROM subjects LIKE 'archived_at'");
@@ -1212,7 +1136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $writer->save('php://output');
         exit();
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         $_SESSION['error'] = "Export failed: " . $e->getMessage();
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -2097,7 +2021,7 @@ foreach ($subject_catalog_by_strand as $strandKey => $names) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/capstone/images/school-logo.png" type="image/png">
+    <link rel="icon" href="/images/school-logo.png" type="image/png">
     <title>Subject Management</title>
     
     <!-- Bootstrap CSS -->
@@ -3567,7 +3491,7 @@ foreach ($subject_catalog_by_strand as $strandKey => $names) {
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Dynamic Dropdowns JS -->
-    <script src="/capstone/js/dynamic-dropdowns.js"></script>
+    <script src="/js/dynamic-dropdowns.js"></script>
     
     <script>
         // Debug logging for form submissions
@@ -4111,7 +4035,7 @@ foreach ($subject_catalog_by_strand as $strandKey => $names) {
                 setTimeout(() => {
                     if (!editSubjectDropdown || !editSubjectDropdown.isInitialized) {
                         editSubjectDropdown = new DynamicDropdownSystem({
-                            apiUrl: '/capstone/api/get_subjects_data.php',
+                            apiUrl: '/api/get_subjects_data.php',
                             yearLevelSelectId: 'edit_year_level',
                             strandSelectId: 'edit_strand',
                             subjectSelectId: 'edit_subject_name'

@@ -13,7 +13,7 @@ require_once '../includes/modern_alert_system.php';
 // Check if curricula table exists (migration already ran)
 $table_check = $conn->query("SHOW TABLES LIKE 'curricula'");
 if ($table_check && $table_check->num_rows === 0) {
-    $_SESSION['error'] = "Database tables not initialized. Please run the migration SQL first.";
+    throw new RuntimeException("Database tables not initialized. Apply the deployment schema repair before using Curriculum Management.");
 }
 
 // Get current school year/semester context
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $user_id = $_SESSION['user_id'] ?? 1;
             $stmt->bind_param(
-                "ssississ",
+                "sssisisi",
                 $curriculum_code,
                 $title,
                 $description,
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
             
             $user_id = $_SESSION['user_id'] ?? 1;
-            $stmt->bind_param("ssissi", $title, $description, $subject_id, $status, $curriculum_id);
+            $stmt->bind_param("ssisi", $title, $description, $subject_id, $status, $curriculum_id);
 
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Curriculum updated successfully!";
@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
             
-            $stmt->bind_param("issss", $curriculum_id, $resource_type, $title, $description, $url, $author);
+            $stmt->bind_param("isssss", $curriculum_id, $resource_type, $title, $description, $url, $author);
 
             if ($stmt->execute()) {
                 $_SESSION['success'] = "Resource added successfully!";

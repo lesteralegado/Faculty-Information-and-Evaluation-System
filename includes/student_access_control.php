@@ -82,7 +82,7 @@ function getStudentAccessContext(mysqli $conn, int $userId): array
 function requireStudentAccess(string $requiredAccess = 'full'): void
 {
     if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['user_id'])) {
-        header("Location: /capstone/login.php?error=2");
+        header("Location: /login.php?error=2");
         exit();
     }
 
@@ -99,7 +99,7 @@ function requireStudentAccess(string $requiredAccess = 'full'): void
     // Inactive students: restricted to Credential Request only (still allowed to stay logged in)
     if ($statusNorm !== 'active') {
         if ($requiredAccess !== 'credential_only') {
-            header("Location: /capstone/student/credential_form_request.php?restricted=inactive");
+            header("Location: /student/credential_form_request.php?restricted=inactive");
             exit();
         }
         return;
@@ -107,7 +107,7 @@ function requireStudentAccess(string $requiredAccess = 'full'): void
 
     // Active but not enrolled in current SY/Sem: restricted to Credential Request only
     if ($requiredAccess === 'full' && !$ctx['enrolled']) {
-        header("Location: /capstone/student/credential_form_request.php?restricted=1");
+        header("Location: /student/credential_form_request.php?restricted=1");
         exit();
     }
 }
